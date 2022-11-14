@@ -1,98 +1,94 @@
 #include <iostream>
-#include <queue>
 
 using namespace std;
 
 // swea 2112 - 보호 필름
 // DFS, backtracking
-
-// 약품 투입 모두 검사 -> 최소값 출력
-// path -> 0 (안 넣기), 1(A, 0), 2(B, 1)
-
-// 시간 초과 처리 => dfs 최대한 자르기 + 다른 함수들도 최대한 자르기
+// 약품 투입하는 모든 가짓수 세기 (투입 안 하는 것 포함)
+// 성능검사 통과 -> 최소 약품 수 세기
+// 시간 초과 -> DFS 중간에 끊기 & chk 함수 중간에 끊기
 
 int d, w, k;
-int arr[14][21];
-int arr_cp[14][21];
-int min1;
-int path[21];
+int film[14][21];
+int film_cp[14][21]; // arr copy
 
-int ok()
+int path[14];// -1 : 약품 X, 0 : 0으로 , 1 : 1로 처리
+int min1 = 10000000000;
+
+void arrCp()
 {
-	// arr 복사 + 약품 투입
-	for (int i = 0; i < d; i++)
+	for (int i = 0; i < d; i++) 
 	{
-		if (path[i] != 0)
+		for (int j = 0; j < w; j++)
 		{
-			for (int j = 0; j < w; j++)
-			{
-				arr_cp[i][j] = path[i] - 1;
-			}
+			if (path[i] == -1) film_cp[i][j] = film[i][j];
+			else if (path[i] == 0) film_cp[i][j] = 0;
+			else film_cp[i][j] = 1;
 		}
-		else
-		{
-			for (int j = 0; j < w; j++)
-			{
-				arr_cp[i][j] = arr[i][j];
-			}
-		}
-		
 	}
-
-	// 품질검사 확인
-	for (int i = 0; i < w; i++)
-	{
-		int j = 1;
-		int same_cnt = 1;
-		int chk = -1;
-		while (j < d)
-		{
-			while (j < d && arr_cp[j][i] == arr_cp[j - 1][i])
-			{
-				same_cnt++;
-				j++;
-			}
-			if (same_cnt >= k)
-			{
-				chk = 1;
-				break;
-			}
-			same_cnt = 1;
-			j++;
-		}
-		if (chk == -1) return -1; // 자르기 -> 시간초과 줄이기 위해
-	}
-
-	return 1;
 }
 
-int tmp_cnt;
-void DFS(int lv)
+int chk()
 {
-	tmp_cnt = 0;
-	for (int i = 0; i < lv; i++) if (path[i] != 0) tmp_cnt++;
-	if (tmp_cnt >= min1) return; // 시간 초과때문에 여기서 dfs 자름
+	int res = 0;
+	for (int i = 0; i < w; i++)
+	{
+		int idx = 0;
+		int max_cnt = 0;
+		int cnt;
+		while (idx < d - 1)
+		{
+			cnt = 1;
+			while (idx < d - 1 && film_cp[idx][i] == film_cp[idx + 1][i])
+			{
+				cnt++;
+				idx++;
+			}
+			idx++;
+			if (max_cnt < cnt) max_cnt = cnt;
+		}
+		if (max_cnt >= k) res++;
+		else return -1;
+	}
+	return res;
+}
+
+// 약품 카운트가 min1보다 클 경우 무조건 return
+void DFS(int lv, int med_cnt)
+{
+	if (med_cnt >= min1 || min1 == 0) return;
 	if (lv == d)
 	{
-		// 합격인지 아닌지
-		int res = ok();
-		if (res == -1) return;
+		// 보호필름 계산
+		arrCp();
+		int tmp_res = chk();
 
-		// 합격이라면 약품투입횟수 계산
-		int cnt = 0;
-		for (int i = 0; i < d; i++)
+		// 합격인지 계산
+		if (tmp_res == w)
 		{
-			if (path[i] != 0) cnt++;
+			int tmp_cnt = 0;
+			for (int i = 0; i < d; i++)
+			{
+				if (path[i] != -1) tmp_cnt++;
+			}
+			if (tmp_cnt < min1)
+			{
+				min1 = tmp_cnt;
+			}
 		}
-		if (cnt < min1) min1 = cnt;
+
 		return;
 	}
+	
+	path[lv] = -1;
+	DFS(lv + 1, med_cnt);
 
-	for (int i = 0; i < 3; i++)
-	{
-		path[lv] = i;
-		DFS(lv + 1);
-	}
+	path[lv] = 0;
+	DFS(lv + 1, med_cnt + 1);
+
+	path[lv] = 1;
+	DFS(lv + 1, med_cnt + 1);
+
 }
 
 
@@ -103,27 +99,30 @@ int main()
 	for (int tc = 1; tc <= T; tc++)
 	{
 		cin >> d >> w >> k;
-		min1 = 100;
+		min1 = 10000000000;
+
 		for (int i = 0; i < d; i++)
 		{
-			for (int j = 0; j < w; j++)
-			{
-				cin >> arr[i][j];
-			}
+			for (int j = 0; j < w; j++) cin >> film[i][j];
 		}
-	
-		for (int i = 0; i < w; i++) path[i] = 0;
-		if (ok() == 1)
+
+		// 약품 안 넣고 되는지 먼저 확인
+		for (int i = 0; i < w; i++) path[i] = -1;
+		arrCp();
+		if (chk() == w)
 		{
 			cout << '#' << tc << ' ' << 0 << '\n';
 			continue;
 		}
 
-		for (int i = 0; i < 3; i++)
-		{
-			path[0] = i;
-			DFS(1);
-		}
+		path[0] = -1;
+		DFS(1, 0);
+
+		path[0] = 0;
+		DFS(1, 1);
+
+		path[0] = 1;
+		DFS(1, 1);
 
 		cout << '#' << tc << ' ' << min1 << '\n';
 	}
