@@ -260,7 +260,6 @@ int main()
     }
 
     mov();
-
     if (res == 100000) cout << -1;
     else cout << res;
 
