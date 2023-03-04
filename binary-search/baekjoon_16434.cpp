@@ -7,6 +7,8 @@ using namespace std;
 // 골드 4
 
 // 이분탐색으로 풀어보자
+// long long int num 계산 시
+// ex) num += (long long int)10; 이렇게 하면 된다.
 
 struct room
 {
