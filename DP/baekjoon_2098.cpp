@@ -9,6 +9,7 @@ using namespace std;
 // 골드 1
 
 // 순회이므로 처음 시작 정점을 0번으로 임의 설정
+// https://velog.io/@kimdukbae/BOJ-2098-%EC%99%B8%ED%8C%90%EC%9B%90-%EC%88%9C%ED%9A%8C-Python
 
 #define INF 999999999
 
@@ -30,8 +31,8 @@ int dfs(int now, int visited) // now : 현재 위치, visited : visit flag
 	{
 		return DP[now][visited]; // 이미 갱신된 적 있다면(방문한 적 있다면) 반환
 	}
-	
-	int bit = 1;
+
+	int bit = 1; // bit-mask용
 	int tmp = INF;
 	for (int i = 1; i < n; i++)
 	{
